@@ -3,10 +3,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>できたかな？ by Wel (Be)</title>
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon-180.png">
-<meta name="theme-color" content="#ffd9e2">
+<meta name="theme-color" content="#ffd9e2"><meta name="color-scheme" content="light">
 <style>
-:root{color-scheme:light dark;--bg:#fff6ea;--card:#fff;--tx:#4b3a33;--sub:#8a766b;--pk:#ff7fa0;--gr:#4fc08d;--ye:#ffd166;--bd:#f0dccb}
-@media(prefers-color-scheme:dark){:root{--bg:#2b2326;--card:#3b2f33;--tx:#fdeee6;--sub:#c9b2a8;--bd:#55444a}}
+:root{color-scheme:light;--bg:#fff6ea;--card:#fff;--tx:#4b3a33;--sub:#8a766b;--pk:#ff7fa0;--gr:#4fc08d;--ye:#ffd166;--bd:#f0dccb}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.6 "Hiragino Maru Gothic ProN","Zen Maru Gothic","Yu Gothic",sans-serif}
 #app{max-width:520px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom))}
 h1{font-size:30px;margin:8px 0;text-align:center}h2{font-size:22px;text-align:center}h3{margin:24px 0 8px}
@@ -30,14 +29,16 @@ input,select,textarea{font:inherit;width:100%;padding:12px;border-radius:14px;bo
 .tm{font-size:48px;font-weight:700;text-align:center}.tb{margin:4px 0 12px}
 .rec{background:var(--card);border-radius:16px;padding:10px 14px;margin:10px 0}.rec li{list-style:none}.rec ul{padding:0;margin:6px 0}
 #rot{display:none}@media(orientation:landscape) and (max-height:500px){#rot{display:flex;position:fixed;inset:0;background:var(--bg);align-items:center;justify-content:center;z-index:9;font-size:24px;text-align:center}}
+.pic{width:1em;height:1em;object-fit:cover;border-radius:50%;vertical-align:middle}.pic.f{object-fit:contain;border-radius:12%}.char .pic{width:1.5em;height:1.5em}.row .pic{width:36px;height:36px}.picks .pic{width:56px;height:56px}
+.upl{display:inline-block;border:2px solid var(--bd);background:var(--card);border-radius:18px;padding:12px 16px;min-height:52px;cursor:pointer;margin:8px 8px 8px 0}.two .on{border-color:var(--pk);background:var(--bd)}
 a{color:var(--pk)}
 </style></head><body>
 <div id="rot">📱 たてむきにしてね</div><div id="app"></div>
 <script data-goatcounter="https://wel-be.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <script>
-const VER='1.0.0',UPD='2026-10-22',KEY='dekitakana.v1';
+const VER='1.1.0',UPD='2026-10-22',KEY='dekitakana.v1';
 const DEF=['えらいね！','すごい！','やったね！','ナイス！','かっこいい！','さすがだね！','ばっちり！'];
-const CH=['🐰','🐻','🐱','🐶','🐼','🐥','🦊','🐸'],KI=['🧒','👦','👧','🐣','🌟','🍓','🚀','🌈'],TI=['🪥','👕','🎒','🍚','🛁','📚','🧸','🧼','🥛','🌙','🧹','✏️'];
+const AV=['av:1','av:2','av:3','av:4','av:5','av:6'],CH=AV,KI=AV,TI=['🪥','👕','🎒','🍚','🛁','📚','🧸','🧼','🥛','🌙','🧹','✏️'];
 const app=document.getElementById('app');
 const UPDMSG='新しいバージョンがあります';let waitSW=null,S,view={n:'home'},lock=0,busy=false,saveErr=false,notices=[],toastMsg='',later=false;
 const uid=()=>Math.random().toString(36).slice(2,10);
@@ -47,7 +48,7 @@ const today=()=>ds(new Date()),shift=(s,n)=>{const [y,m,d]=s.split('-').map(Numb
 const fresh=()=>({kids:[],gone:[],hist:{},msgs:[],endMsg:'',last:today()});
 function load(){let raw=null;try{localStorage.setItem('dk.t','1');localStorage.removeItem('dk.t');raw=localStorage.getItem(KEY)}catch(e){lock=1}
  try{S=raw?JSON.parse(raw):fresh()}catch(e){S=fresh();lock=1;notices.push('保存データを読み込めませんでした。データを守るため編集を止めています。')}}
-function save(){if(lock===1)return;try{localStorage.setItem(KEY,JSON.stringify(S));saveErr=false}catch(e){saveErr=true}}
+function save(){gc();if(lock===1)return;try{localStorage.setItem(KEY,JSON.stringify(S));saveErr=false}catch(e){saveErr=true}}
 function roll(){const t=today();if(S.last===t)return;
  S.kids.forEach(k=>{if(k.tasks.length&&Object.keys(k.st).length)(S.hist[k.id]??={})[S.last]={name:k.name,items:k.tasks.map(x=>({n:x.name,ok:k.st[x.id]==='ok'}))};
   k.st={};k.pos=0;k.ret=null;k.t.left=null;k.t.end=null});S.last=t;save()}
@@ -59,34 +60,56 @@ const active=k=>!!k.t.end||k.t.left!=null;
 function pause(k){k.t.left=rem(k);k.t.end=null}
 function nextIdx(k){const n=k.tasks.length;for(let i=1;i<=n;i++){const j=(k.pos+i)%n;if(k.st[k.tasks[j].id]!=='ok')return j}return -1}
 const pick=()=>{const a=DEF.concat(S.msgs);return a[Math.floor(Math.random()*a.length)]};
-const picks=(f,list,cur)=>`<div class="picks">${list.map(v=>`<button class="${v===cur?'on':''}" data-a="pick" data-f="${f}" data-v="${v}">${v}</button>`).join('')}</div>`;
+const picks=(f,list,cur)=>`<div class="picks">${list.map(v=>`<button class="${v===cur?'on':''}" data-a="pick" data-f="${f}" data-v="${v}">${pic(v)}</button>`).join('')}</div>`;
 const timerBox=(k,full)=>{const r=rem(k),tot=k.t.total||k.t.min*60;
  let h=`<div class="tm" data-tm="${k.id}">${fmt(r)}</div><div class="bar tb"><i style="width:${active(k)?100-r/tot*100:0}%"></i></div>`;
  if(!full)return `<div class="box">⏱ ${esc(k.name)} ${h}</div>`;
  if(!active(k))h+=`<button class="big go" data-a="tstart">▶ タイマーかいし（${k.t.min}分）</button>`;
  else h+=`<div class="two">${k.t.end?'<button class="big no" data-a="tpause">⏸ ていし</button>':'<button class="big go" data-a="tstart">▶ さいかい</button>'}<button class="big" data-a="treset">↺ リセット</button></div>`;
  return h};
+let db=null,P=null,drag=null;const imgs={},SZ=280;
+const idb=()=>new Promise(r=>{try{const q=indexedDB.open('dk',1);q.onupgradeneeded=()=>q.result.createObjectStore('i');q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}});
+async function loadImgs(){db=await idb();if(!db)return;await new Promise(r=>{const q=db.transaction('i').objectStore('i').openCursor();q.onsuccess=()=>{const c=q.result;if(c){imgs[c.key]=c.value;c.continue()}else r()};q.onerror=r})}
+const put=(k,v)=>new Promise((res,rej)=>{if(!db)return rej();const t=db.transaction('i','readwrite');t.objectStore('i').put(v,k);t.oncomplete=res;t.onerror=rej});
+function gc(){if(!db)return;const u=new Set(),add=v=>{if(v&&String(v).startsWith('img:'))u.add(v.split(':')[1])};S.kids.forEach(k=>{add(k.icon);add(k.char);k.tasks.forEach(t=>add(t.icon))});add(view.icon);if(P)add(P.prev.icon);
+ Object.keys(imgs).forEach(id=>{if(!u.has(id)){delete imgs[id];try{db.transaction('i','readwrite').objectStore('i').delete(id)}catch(e){}}})}
+function pic(v){v=v||'';if(v.startsWith('av:'))return `<img class="pic" src="avatars/${v.slice(3)}.png" alt="">`;
+ if(v.startsWith('img:')){const [,id,m]=v.split(':');return imgs[id]?`<img class="pic ${m==='f'?'f':''}" src="${imgs[id]}" alt="">`:'🙂'}return esc(v)}
+const upl=t=>`<label class="upl">📷 画像をえらぶ<input type="file" hidden accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" data-f="file" data-t="${t}"></label>`;
+function openImg(file,t){if(!db)return toast('このブラウザでは画像を保存できません');
+ if(!/^image\/(jpeg|png|webp|heic|heif)$/.test(file.type)&&!/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name))return toast('えらべる形式は JPEG・PNG・WebP・HEIC です');
+ if(file.size>10*1024*1024)return toast('10MBより大きい画像は使えません');
+ const im=new Image();im.onload=()=>{P={im,z:1,ox:0,oy:0,mode:'c',t,prev:{...view}};view={n:'imgedit',id:view.id};render()};
+ im.onerror=()=>toast('この画像は読み込めませんでした。このブラウザが形式に対応していない可能性があります。ほかの画像をえらんでください');im.src=URL.createObjectURL(file)}
+function clampP(){const w=P.im.naturalWidth,h=P.im.naturalHeight,s=Math.max(SZ/w,SZ/h)*P.z;P.ox=Math.max(-(w*s-SZ)/2,Math.min((w*s-SZ)/2,P.ox));P.oy=Math.max(-(h*s-SZ)/2,Math.min((h*s-SZ)/2,P.oy))}
+function draw(cv,out){const {im,z,ox,oy,mode}=P,w=im.naturalWidth,h=im.naturalHeight;let g;
+ if(mode==='f'){const s=out?Math.min(1,640/Math.max(w,h)):SZ/Math.max(w,h);cv.width=out?Math.round(w*s):SZ;cv.height=out?Math.round(h*s):SZ;g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);g.drawImage(im,(cv.width-w*s)/2,(cv.height-h*s)/2,w*s,h*s)}
+ else{clampP();const W=out?512:SZ,k=W/SZ,s=Math.max(SZ/w,SZ/h)*z;cv.width=cv.height=W;g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,W,W);g.drawImage(im,(SZ/2+ox-w*s/2)*k,(SZ/2+oy-h*s/2)*k,w*s*k,h*s*k)}}
 const V={
-home:()=>`<h1>🌸 できたかな？</h1><p class="sub" style="text-align:center">おなまえをえらんでね</p>`+(S.kids.length?S.kids.map(k=>`<button class="big kidbtn" data-a="open" data-id="${k.id}"><span class="ic">${k.icon}</span>${esc(k.name)}${k.t.end?' ⏱':''}</button>`).join(''):`<p class="box">まだ こどもがいません。「こどもを追加」をおしてね。</p>`)+
+home:()=>`<h1>🌸 できたかな？</h1><p class="sub" style="text-align:center">おなまえをえらんでね</p>`+(S.kids.length?S.kids.map(k=>`<button class="big kidbtn" data-a="open" data-id="${k.id}"><span class="ic">${pic(k.icon)}</span>${esc(k.name)}${k.t.end?' ⏱':''}</button>`).join(''):`<p class="box">まだ こどもがいません。「こどもを追加」をおしてね。</p>`)+
  `<button class="big alt" data-a="newkid">＋ こどもを追加</button><div class="nav"><button data-a="go" data-n="hist">📅 りれき</button><button data-a="go" data-n="set">⚙ せってい</button></div><p class="small" style="text-align:center">by Wel (Be)</p>`,
 kid:k=>{const n=k.tasks.length;let h=`<div class="top"><button data-a="go" data-n="home">← もどる</button><button data-a="go" data-n="kedit" data-id="${k.id}">✏ へんしゅう</button></div>`;
- if(!n)return h+`<div class="char">${k.char}</div><p class="box">タスクがありません。「タスクを追加」をおしてね。</p><button class="big alt" data-a="newtask">＋ タスクを追加</button>`+(active(k)?timerBox(k,0):'');
- if(done(k)&&!view.fb)return h+`<div class="char bounce">${k.char}</div><h2>ぜんぶ確認できたね！</h2>`+timerBox(k,1);
+ if(!n)return h+`<div class="char">${pic(k.char)}</div><p class="box">タスクがありません。「タスクを追加」をおしてね。</p><button class="big alt" data-a="newtask">＋ タスクを追加</button>`+(active(k)?timerBox(k,0):'');
+ if(done(k)&&!view.fb)return h+`<div class="char bounce">${pic(k.char)}</div><h2>ぜんぶ確認できたね！</h2>`+timerBox(k,1);
  const t=k.tasks[k.pos],dn=k.tasks.filter(x=>k.st[x.id]==='ok').length;
  return h+(active(k)?timerBox(k,0):'')+`<div class="prog">${k.pos+1} / ${n}</div><div class="bar"><i style="width:${dn/n*100}%"></i></div>
- <div class="char ${view.fb?'bounce':''}">${k.char}</div><div class="say">${view.fb==='ok'?esc(view.msg):'&nbsp;'}</div>
- <div class="task"><span class="ic">${t.icon}</span><b>${esc(t.name)}</b>${t.desc?`<p>${esc(t.desc)}</p>`:''}</div>
+ <div class="char ${view.fb?'bounce':''}">${pic(k.char)}</div><div class="say">${view.fb==='ok'?esc(view.msg):'&nbsp;'}</div>
+ <div class="task"><span class="ic">${pic(t.icon)}</span><b>${esc(t.name)}</b>${t.desc?`<p>${esc(t.desc)}</p>`:''}</div>
  <div class="two"><button class="big go" data-a="ok" ${view.fb?'disabled':''}>⭕ できた</button><button class="big no" data-a="no" ${view.fb?'disabled':''}>まだ</button></div>
  ${n>1?`<button data-a="back" ${view.fb?'disabled':''}>← まえのタスクをなおす</button>`:''}`},
 kedit:k=>`<div class="top"><button data-a="go" data-n="kid" data-id="${k.id}">← もどる</button></div><h2>こどもの設定</h2>
  <label>なまえ（20文字まで）<input data-f="name" maxlength="20" value="${esc(k.name)}"></label>
- <h3>アイコン</h3>${picks('icon',KI,k.icon)}<h3>キャラクター</h3>${picks('char',CH,k.char)}
+ <h3>アイコン</h3>${picks('icon',KI,k.icon)}${upl('icon')}<button data-a="ireset" data-f="icon">標準にもどす</button><h3>キャラクター</h3>${picks('char',CH,k.char)}${upl('char')}<button data-a="ireset" data-f="char">標準にもどす</button>
  <h3>タイマー（1〜120分）</h3><input data-f="min" type="number" min="1" max="120" value="${k.t.min}"><p class="small">変更は次回のタイマー開始から適用されます</p>
- <h3>タスク</h3>${k.tasks.map((t,i)=>`<div class="row"><span>${t.icon} ${esc(t.name)}</span><button data-a="mv" data-i="${i}" data-d="-1">↑</button><button data-a="mv" data-i="${i}" data-d="1">↓</button><button data-a="edtask" data-i="${i}">✏</button><button data-a="deltask" data-i="${i}">🗑</button></div>`).join('')||'<p class="box">タスクがありません</p>'}
+ <h3>タスク</h3>${k.tasks.map((t,i)=>`<div class="row"><span>${pic(t.icon)} ${esc(t.name)}</span><button data-a="mv" data-i="${i}" data-d="-1">↑</button><button data-a="mv" data-i="${i}" data-d="1">↓</button><button data-a="edtask" data-i="${i}">✏</button><button data-a="deltask" data-i="${i}">🗑</button></div>`).join('')||'<p class="box">タスクがありません</p>'}
  <button class="big alt" data-a="newtask">＋ タスクを追加</button><button data-a="delkid" style="margin-top:24px">このこどもを削除</button>`,
 task:k=>{const t=k.tasks[view.i]||{name:'',desc:'',icon:TI[0]};return `<div class="top"><button data-a="go" data-n="kedit" data-id="${k.id}">← もどる</button></div><h2>${view.i==null?'タスクを追加':'タスクを編集'}</h2>
- <label>タスク名（30文字まで）<input data-f="tn" maxlength="30" value="${esc(t.name)}"></label><label>せつめい（100文字まで・なくてもOK）<input data-f="td" maxlength="100" value="${esc(t.desc)}"></label>
- <h3>アイコン</h3>${picks('ticon',TI,view.icon||t.icon)}<button class="big alt" data-a="savetask">ほぞん</button>`},
+ <label>タスク名（30文字まで）<input data-f="tn" maxlength="30" value="${esc(view.tn??t.name)}"></label><label>せつめい（100文字まで・なくてもOK）<input data-f="td" maxlength="100" value="${esc(view.td??t.desc)}"></label>
+ <h3>アイコン</h3><div class="ic">${pic(view.icon||t.icon)}</div>${picks('ticon',TI,view.icon||t.icon)}${upl('ticon')}<button class="big alt" data-a="savetask">ほぞん</button>`},
+imgedit:()=>`<h2>画像のちょうせい</h2><canvas id="cv" width="280" height="280" style="width:280px;height:280px;display:block;margin:auto;border-radius:${P.mode==='c'?'50%':'12px'};border:2px solid var(--bd);touch-action:none"></canvas>
+ <div class="two" style="margin-top:12px"><button class="${P.mode==='f'?'on':''}" data-a="imode" data-m="f">全体を表示</button><button class="${P.mode==='c'?'on':''}" data-a="imode" data-m="c">正方形に切り抜く</button></div>
+ ${P.mode==='c'?`<p class="small">ゆびでうごかして、スライダーで大きさをかえます</p><input type="range" data-f="zoom" min="1" max="4" step="0.05" value="${P.z}">`:''}
+ <div class="two" style="margin-top:12px"><button data-a="icancel">やめる</button><button class="alt" data-a="iok">決定</button></div>`,
 hist:()=>{const all=S.kids.map(k=>({id:k.id,name:k.name})).concat(S.gone.map(g=>({id:g.id,name:`${g.name}（削除済み ${g.at}）`})));
  let h=`<div class="top"><button data-a="go" data-n="home">← もどる</button></div><h2>りれき</h2><p class="sub">こどもをえらんでね</p><div class="picks">${all.map(x=>`<button class="${x.id===view.hk?'on':''}" data-a="hk" data-id="${x.id}">${esc(x.name)}</button>`).join('')||'<p class="box">こどもがいません</p>'}</div>`;
  if(!view.hk)return h;const to=view.to||shift(today(),-1),from=view.from||shift(to,-6);
@@ -95,7 +118,7 @@ hist:()=>{const all=S.kids.map(k=>({id:k.id,name:k.name})).concat(S.gone.map(g=>
   h+=`<div class="rec"><b>${d}</b>${r?`（${esc(r.name)}）<ul>${r.items.map(i=>`<li>${i.ok?'✅ できた':'⬜ まだ'}　${esc(i.n)}</li>`).join('')}</ul><button data-a="delday" data-d="${d}">この日を削除</button>`:' <span class="sub">記録なし</span>'}</div>`;d=shift(d,-1)}
  return h+`<button data-a="delkh">このこどもの履歴をすべて削除</button> <button data-a="delallh">全履歴を削除</button>`},
 set:()=>`<div class="top"><button data-a="go" data-n="home">← もどる</button></div><h2>せってい</h2>
- <h3>こども・タスク</h3>${S.kids.map(k=>`<button class="big" data-a="go" data-n="kedit" data-id="${k.id}">${k.icon} ${esc(k.name)}の設定</button>`).join('')||'<p class="box">ホームで「こどもを追加」をおしてね</p>'}
+ <h3>こども・タスク</h3>${S.kids.map(k=>`<button class="big" data-a="go" data-n="kedit" data-id="${k.id}">${pic(k.icon)} ${esc(k.name)}の設定</button>`).join('')||'<p class="box">ホームで「こどもを追加」をおしてね</p>'}
  <h3>キャラクターのメッセージ</h3><p class="small">「できた」のときに出ます（全員共通・100件・50文字まで）。ふだんのメッセージは消せません。</p>
  ${S.msgs.map((m,i)=>`<div class="row"><span>${esc(m)}</span><button data-a="edmsg" data-i="${i}">✏</button><button data-a="delmsg" data-i="${i}">🗑</button></div>`).join('')}
  <div class="row"><input data-f="nm" maxlength="50" placeholder="あたらしいメッセージ"><button data-a="addmsg">追加</button></div>
@@ -111,7 +134,7 @@ function render(){let h='';
  h+=notices.map((m,i)=>m===UPDMSG?`<div class="note">${m}<button data-a="upd">今すぐ更新</button><button data-a="close" data-i="${i}">後で</button></div>`:`<div class="note">${esc(m)}<button data-a="close" data-i="${i}">とじる</button></div>`).join('');
  if(toastMsg)h+=`<div class="say">${esc(toastMsg)}</div>`;
  const k=kid();if(['kid','kedit','task'].includes(view.n)&&!k)view={n:'home'};
- app.innerHTML=h+V[view.n](k)}
+ app.innerHTML=h+V[view.n](k);if(view.n==='imgedit'&&P)draw(document.getElementById('cv'))}
 const go=(n,o={})=>{view={n,...o};render()};
 function toast(m){toastMsg=m;render();setTimeout(()=>{toastMsg='';render()},5000)}
 function answer(a){const k=kid();if(busy||!k||!k.tasks.length)return;busy=true;const t=k.tasks[k.pos];
@@ -121,13 +144,17 @@ function tick(){let fin=false;S.kids.forEach(k=>{if(k.t.end&&Date.now()>=k.t.end
   const m=S.endMsg||'じかんだよ！おわったよ！';if(late)notices.push(`${k.name}のタイマーは、とじているあいだにおわっていました`);else if(view.n==='kid'&&view.id===k.id)toast(m);else notices.push(`${k.name}：${m}`)}});
  if(fin){save();render();return}
  document.querySelectorAll('[data-tm]').forEach(e=>{const k=S.kids.find(x=>x.id===e.dataset.tm);if(!k)return;const r=rem(k);e.textContent=fmt(r);const b=e.nextElementSibling.firstChild;if(b)b.style.width=(active(k)?100-r/(k.t.total||k.t.min*60)*100:0)+'%'})}
-const EDITLESS=['upd','go','open','close','retry','hk'];
+const EDITLESS=['imode','icancel','upd','go','open','close','retry','hk'];
 app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,d=b.dataset,k=kid();
  if(lock&&!EDITLESS.includes(a))return toast('いまは編集できません');
  const reset=()=>{k.st={};k.pos=0;k.ret=null};
- const A={upd:()=>waitSW&&waitSW.postMessage('skip'),go:()=>go(d.n,d.id?{id:d.id}:{}),open:()=>go('kid',{id:d.id}),close:()=>{notices.splice(+d.i,1);render()},retry:()=>{save();render()},
+ const A={ireset:()=>{k[d.f]='av:'+(S.kids.indexOf(k)%6+1);save();render()},imode:()=>{P.mode=d.m;render()},icancel:()=>{view=P.prev;P=null;render()},
+ iok:async()=>{const cv=document.createElement('canvas');draw(cv,true);const url=cv.toDataURL('image/jpeg',.85),id=uid();
+  try{await put(id,url)}catch(e){return toast('画像を保存できませんでした。保存領域をかくにんしてください')}
+  imgs[id]=url;const v=`img:${id}:${P.mode}`,t=P.t;view=P.prev;P=null;if(t==='ticon')view.icon=v;else{kid()[t]=v;save()}render()},
+ upd:()=>waitSW&&waitSW.postMessage('skip'),go:()=>go(d.n,d.id?{id:d.id}:{}),open:()=>go('kid',{id:d.id}),close:()=>{notices.splice(+d.i,1);render()},retry:()=>{save();render()},
  hk:()=>go('hist',{hk:d.id}),
- newkid:()=>{const n=S.kids.length+1,id=uid();S.kids.push({id,name:'子ども'+n,icon:KI[(n-1)%8],char:CH[(n-1)%8],tasks:[],st:{},pos:0,ret:null,t:{min:30,left:null,end:null,total:0}});save();go('kedit',{id})},
+ newkid:()=>{const n=S.kids.length+1,id=uid();S.kids.push({id,name:'子ども'+n,icon:KI[(n-1)%6],char:CH[(n-1)%6],tasks:[],st:{},pos:0,ret:null,t:{min:30,left:null,end:null,total:0}});save();go('kedit',{id})},
  ok:()=>answer('ok'),no:()=>answer('no'),
  back:()=>{if(busy)return;const n=k.tasks.length;k.ret??=k.pos;k.pos=(k.pos-1+n)%n;save();render()},
  pick:()=>{const f=d.f;if(f==='ticon'){view.icon=d.v}else k[f]=d.v;save();render()},
@@ -150,19 +177,24 @@ app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)retu
  delday:()=>{if(confirm(`${d.d} の履歴を削除しますか？`)){delete S.hist[view.hk][d.d];save();render()}},
  delkh:()=>{if(confirm('このこどもの履歴をすべて削除しますか？')){delete S.hist[view.hk];S.gone=S.gone.filter(g=>g.id!==view.hk);save();go('hist')}},
  delallh:()=>{if(confirm('現在のこども・削除済みのこどもを含む、全履歴を削除しますか？')){S.hist={};S.gone=[];save();go('hist')}},
- wipe:()=>{if(confirm('こども・タスク・履歴・メッセージなど、すべてのデータを削除します。よろしいですか？')){try{localStorage.removeItem(KEY)}catch(e){}S=fresh();notices=[];go('home')}}};
+ wipe:()=>{if(confirm('こども・タスク・履歴・メッセージなど、すべてのデータを削除します。よろしいですか？')){try{localStorage.removeItem(KEY)}catch(e){}S=fresh();notices=[];gc();go('home')}}};
  A[a]?.()});
 app.addEventListener('change',e=>{const f=e.target.dataset.f,k=kid();if(!f||(lock&&f!=='from'&&f!=='to'))return;
+ if(f==='file'){const fl=e.target.files[0];const t=e.target.dataset.t;e.target.value='';if(fl)openImg(fl,t);return}
  if(f==='name'){k.name=e.target.value.trim()||'子ども'+(S.kids.indexOf(k)+1)}
  else if(f==='min'){k.t.min=Math.min(120,Math.max(1,Math.round(+e.target.value)||30));e.target.value=k.t.min}
  else if(f==='endMsg')S.endMsg=e.target.value.trim().slice(0,50);
  else if(f==='from'||f==='to'){view[f]=e.target.value;render();return}
  save();if(saveErr)render()});
-function boot(){roll();tick();render()}
+app.addEventListener('input',e=>{const f=e.target.dataset.f;if(f==='tn')view.tn=e.target.value;else if(f==='td')view.td=e.target.value;else if(f==='zoom'&&P){P.z=+e.target.value;draw(document.getElementById('cv'))}});
+app.addEventListener('pointerdown',e=>{if(e.target.id==='cv'&&P&&P.mode==='c'){drag={x:e.clientX,y:e.clientY};e.target.setPointerCapture(e.pointerId)}});
+app.addEventListener('pointermove',e=>{if(!drag||!P)return;P.ox+=e.clientX-drag.x;P.oy+=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};draw(document.getElementById('cv'))});
+app.addEventListener('pointerup',()=>{drag=null});
+function boot(){roll();tick();render();setInterval(tick,500)}
 load();
 try{const bc=new BroadcastChannel('dk');bc.onmessage=e=>{if(e.data==='hi')bc.postMessage('busy');else if(e.data==='busy'&&!lock){lock=2;render()}};bc.postMessage('hi')}catch(e){}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!lock){roll();tick();render()}});
-boot();setInterval(tick,500);
+loadImgs().then(boot,boot);
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').then(r=>{
  const offer=w=>{if(later||!navigator.serviceWorker.controller)return;later=true;waitSW=w;notices.push(UPDMSG);render()};
  if(r.waiting)offer(r.waiting);r.addEventListener('updatefound',()=>{const w=r.installing;w.addEventListener('statechange',()=>{if(w.state==='installed')offer(w)})});
