@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>できたかな？ by Wel (Be)</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon-180.png">
+<meta name="theme-color" content="#ffd9e2">
+<style>
+:root{color-scheme:light dark;--bg:#fff6ea;--card:#fff;--tx:#4b3a33;--sub:#8a766b;--pk:#ff7fa0;--gr:#4fc08d;--ye:#ffd166;--bd:#f0dccb}
+@media(prefers-color-scheme:dark){:root{--bg:#2b2326;--card:#3b2f33;--tx:#fdeee6;--sub:#c9b2a8;--bd:#55444a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.6 "Hiragino Maru Gothic ProN","Zen Maru Gothic","Yu Gothic",sans-serif}
+#app{max-width:520px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom))}
+h1{font-size:30px;margin:8px 0;text-align:center}h2{font-size:22px;text-align:center}h3{margin:24px 0 8px}
+button{font:inherit;color:inherit;background:var(--card);border:2px solid var(--bd);border-radius:18px;padding:12px 16px;min-height:52px;cursor:pointer}
+button:disabled{opacity:.4}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--pk)}
+.big{display:block;width:100%;font-size:22px;min-height:68px;margin:12px 0;font-weight:700}
+.kidbtn{display:flex;align-items:center;gap:14px;text-align:left}.ic{font-size:40px}
+.go{background:var(--gr);border-color:var(--gr);color:#fff}.no{background:var(--ye);border-color:var(--ye);color:#4b3a33}.alt{background:var(--pk);border-color:var(--pk);color:#fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.top,.nav{display:flex;justify-content:space-between;gap:8px;margin:8px 0}
+.char{font-size:110px;text-align:center;line-height:1.1;margin-top:8px}.bounce{animation:b .5s}@keyframes b{50%{transform:translateY(-14px) scale(1.06)}}
+@media(prefers-reduced-motion:reduce){.bounce{animation:none}}
+.say{background:var(--card);border:3px solid var(--pk);border-radius:22px;padding:8px 16px;text-align:center;font-size:22px;font-weight:700;min-height:48px;margin:4px 0}
+.task{background:var(--card);border:2px solid var(--bd);border-radius:24px;padding:16px;text-align:center;margin:12px 0}.task b{font-size:28px;display:block}.task .ic{font-size:56px}
+.bar{height:16px;background:var(--bd);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--gr);transition:width .3s}
+.prog{text-align:center;font-weight:700;margin-top:8px}.sub,.small{color:var(--sub);font-size:14px}
+.box{background:var(--card);border:2px dashed var(--bd);border-radius:18px;padding:14px}
+.warn,.note{background:#ffe08a;color:#4b3a33;border-radius:14px;padding:10px 14px;margin:8px 0}.note button{margin-left:8px;min-height:36px;padding:4px 12px}
+.row{display:flex;gap:8px;align-items:center;margin:6px 0}.row>span{flex:1;word-break:break-all}.row button{min-height:44px;padding:6px 12px}
+input,select,textarea{font:inherit;width:100%;padding:12px;border-radius:14px;border:2px solid var(--bd);background:var(--card);color:var(--tx)}
+.picks{display:flex;flex-wrap:wrap;gap:8px}.picks button{font-size:28px;min-width:56px}.picks .on{border-color:var(--pk);background:var(--bd)}
+.tm{font-size:48px;font-weight:700;text-align:center}.tb{margin:4px 0 12px}
+.rec{background:var(--card);border-radius:16px;padding:10px 14px;margin:10px 0}.rec li{list-style:none}.rec ul{padding:0;margin:6px 0}
+#rot{display:none}@media(orientation:landscape) and (max-height:500px){#rot{display:flex;position:fixed;inset:0;background:var(--bg);align-items:center;justify-content:center;z-index:9;font-size:24px;text-align:center}}
+a{color:var(--pk)}
+</style></head><body>
+<div id="rot">📱 たてむきにしてね</div><div id="app"></div>
+<script data-goatcounter="https://wel-be.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script>
+const VER='1.0.0',UPD='2026-10-22',KEY='dekitakana.v1';
+const DEF=['えらいね！','すごい！','やったね！','ナイス！','かっこいい！','さすがだね！','ばっちり！'];
+const CH=['🐰','🐻','🐱','🐶','🐼','🐥','🦊','🐸'],KI=['🧒','👦','👧','🐣','🌟','🍓','🚀','🌈'],TI=['🪥','👕','🎒','🍚','🛁','📚','🧸','🧼','🥛','🌙','🧹','✏️'];
+const app=document.getElementById('app');
+const UPDMSG='新しいバージョンがあります';let waitSW=null,S,view={n:'home'},lock=0,busy=false,saveErr=false,notices=[],toastMsg='',later=false;
+const uid=()=>Math.random().toString(36).slice(2,10);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ds=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today=()=>ds(new Date()),shift=(s,n)=>{const [y,m,d]=s.split('-').map(Number);return ds(new Date(y,m-1,d+n))};
+const fresh=()=>({kids:[],gone:[],hist:{},msgs:[],endMsg:'',last:today()});
+function load(){let raw=null;try{localStorage.setItem('dk.t','1');localStorage.removeItem('dk.t');raw=localStorage.getItem(KEY)}catch(e){lock=1}
+ try{S=raw?JSON.parse(raw):fresh()}catch(e){S=fresh();lock=1;notices.push('保存データを読み込めませんでした。データを守るため編集を止めています。')}}
+function save(){if(lock===1)return;try{localStorage.setItem(KEY,JSON.stringify(S));saveErr=false}catch(e){saveErr=true}}
+function roll(){const t=today();if(S.last===t)return;
+ S.kids.forEach(k=>{if(k.tasks.length&&Object.keys(k.st).length)(S.hist[k.id]??={})[S.last]={name:k.name,items:k.tasks.map(x=>({n:x.name,ok:k.st[x.id]==='ok'}))};
+  k.st={};k.pos=0;k.ret=null;k.t.left=null;k.t.end=null});S.last=t;save()}
+const kid=()=>S.kids.find(k=>k.id===view.id);
+const done=k=>k.tasks.length>0&&k.tasks.every(t=>k.st[t.id]==='ok');
+const rem=k=>k.t.end?Math.max(0,Math.ceil((k.t.end-Date.now())/1000)):(k.t.left??k.t.min*60);
+const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+const active=k=>!!k.t.end||k.t.left!=null;
+function pause(k){k.t.left=rem(k);k.t.end=null}
+function nextIdx(k){const n=k.tasks.length;for(let i=1;i<=n;i++){const j=(k.pos+i)%n;if(k.st[k.tasks[j].id]!=='ok')return j}return -1}
+const pick=()=>{const a=DEF.concat(S.msgs);return a[Math.floor(Math.random()*a.length)]};
+const picks=(f,list,cur)=>`<div class="picks">${list.map(v=>`<button class="${v===cur?'on':''}" data-a="pick" data-f="${f}" data-v="${v}">${v}</button>`).join('')}</div>`;
+const timerBox=(k,full)=>{const r=rem(k),tot=k.t.total||k.t.min*60;
+ let h=`<div class="tm" data-tm="${k.id}">${fmt(r)}</div><div class="bar tb"><i style="width:${active(k)?100-r/tot*100:0}%"></i></div>`;
+ if(!full)return `<div class="box">⏱ ${esc(k.name)} ${h}</div>`;
+ if(!active(k))h+=`<button class="big go" data-a="tstart">▶ タイマーかいし（${k.t.min}分）</button>`;
+ else h+=`<div class="two">${k.t.end?'<button class="big no" data-a="tpause">⏸ ていし</button>':'<button class="big go" data-a="tstart">▶ さいかい</button>'}<button class="big" data-a="treset">↺ リセット</button></div>`;
+ return h};
+const V={
+home:()=>`<h1>🌸 できたかな？</h1><p class="sub" style="text-align:center">おなまえをえらんでね</p>`+(S.kids.length?S.kids.map(k=>`<button class="big kidbtn" data-a="open" data-id="${k.id}"><span class="ic">${k.icon}</span>${esc(k.name)}${k.t.end?' ⏱':''}</button>`).join(''):`<p class="box">まだ こどもがいません。「こどもを追加」をおしてね。</p>`)+
+ `<button class="big alt" data-a="newkid">＋ こどもを追加</button><div class="nav"><button data-a="go" data-n="hist">📅 りれき</button><button data-a="go" data-n="set">⚙ せってい</button></div><p class="small" style="text-align:center">by Wel (Be)</p>`,
+kid:k=>{const n=k.tasks.length;let h=`<div class="top"><button data-a="go" data-n="home">← もどる</button><button data-a="go" data-n="kedit" data-id="${k.id}">✏ へんしゅう</button></div>`;
+ if(!n)return h+`<div class="char">${k.char}</div><p class="box">タスクがありません。「タスクを追加」をおしてね。</p><button class="big alt" data-a="newtask">＋ タスクを追加</button>`+(active(k)?timerBox(k,0):'');
+ if(done(k)&&!view.fb)return h+`<div class="char bounce">${k.char}</div><h2>ぜんぶ確認できたね！</h2>`+timerBox(k,1);
+ const t=k.tasks[k.pos],dn=k.tasks.filter(x=>k.st[x.id]==='ok').length;
+ return h+(active(k)?timerBox(k,0):'')+`<div class="prog">${k.pos+1} / ${n}</div><div class="bar"><i style="width:${dn/n*100}%"></i></div>
+ <div class="char ${view.fb?'bounce':''}">${k.char}</div><div class="say">${view.fb==='ok'?esc(view.msg):'&nbsp;'}</div>
+ <div class="task"><span class="ic">${t.icon}</span><b>${esc(t.name)}</b>${t.desc?`<p>${esc(t.desc)}</p>`:''}</div>
+ <div class="two"><button class="big go" data-a="ok" ${view.fb?'disabled':''}>⭕ できた</button><button class="big no" data-a="no" ${view.fb?'disabled':''}>まだ</button></div>
+ ${n>1?`<button data-a="back" ${view.fb?'disabled':''}>← まえのタスクをなおす</button>`:''}`},
+kedit:k=>`<div class="top"><button data-a="go" data-n="kid" data-id="${k.id}">← もどる</button></div><h2>こどもの設定</h2>
+ <label>なまえ（20文字まで）<input data-f="name" maxlength="20" value="${esc(k.name)}"></label>
+ <h3>アイコン</h3>${picks('icon',KI,k.icon)}<h3>キャラクター</h3>${picks('char',CH,k.char)}
+ <h3>タイマー（1〜120分）</h3><input data-f="min" type="number" min="1" max="120" value="${k.t.min}"><p class="small">変更は次回のタイマー開始から適用されます</p>
+ <h3>タスク</h3>${k.tasks.map((t,i)=>`<div class="row"><span>${t.icon} ${esc(t.name)}</span><button data-a="mv" data-i="${i}" data-d="-1">↑</button><button data-a="mv" data-i="${i}" data-d="1">↓</button><button data-a="edtask" data-i="${i}">✏</button><button data-a="deltask" data-i="${i}">🗑</button></div>`).join('')||'<p class="box">タスクがありません</p>'}
+ <button class="big alt" data-a="newtask">＋ タスクを追加</button><button data-a="delkid" style="margin-top:24px">このこどもを削除</button>`,
+task:k=>{const t=k.tasks[view.i]||{name:'',desc:'',icon:TI[0]};return `<div class="top"><button data-a="go" data-n="kedit" data-id="${k.id}">← もどる</button></div><h2>${view.i==null?'タスクを追加':'タスクを編集'}</h2>
+ <label>タスク名（30文字まで）<input data-f="tn" maxlength="30" value="${esc(t.name)}"></label><label>せつめい（100文字まで・なくてもOK）<input data-f="td" maxlength="100" value="${esc(t.desc)}"></label>
+ <h3>アイコン</h3>${picks('ticon',TI,view.icon||t.icon)}<button class="big alt" data-a="savetask">ほぞん</button>`},
+hist:()=>{const all=S.kids.map(k=>({id:k.id,name:k.name})).concat(S.gone.map(g=>({id:g.id,name:`${g.name}（削除済み ${g.at}）`})));
+ let h=`<div class="top"><button data-a="go" data-n="home">← もどる</button></div><h2>りれき</h2><p class="sub">こどもをえらんでね</p><div class="picks">${all.map(x=>`<button class="${x.id===view.hk?'on':''}" data-a="hk" data-id="${x.id}">${esc(x.name)}</button>`).join('')||'<p class="box">こどもがいません</p>'}</div>`;
+ if(!view.hk)return h;const to=view.to||shift(today(),-1),from=view.from||shift(to,-6);
+ h+=`<div class="two"><label>から<input type="date" data-f="from" value="${from}"></label><label>まで<input type="date" data-f="to" value="${to}"></label></div>`;
+ let d=to,c=0;while(d>=from&&c++<400){const r=(S.hist[view.hk]||{})[d];
+  h+=`<div class="rec"><b>${d}</b>${r?`（${esc(r.name)}）<ul>${r.items.map(i=>`<li>${i.ok?'✅ できた':'⬜ まだ'}　${esc(i.n)}</li>`).join('')}</ul><button data-a="delday" data-d="${d}">この日を削除</button>`:' <span class="sub">記録なし</span>'}</div>`;d=shift(d,-1)}
+ return h+`<button data-a="delkh">このこどもの履歴をすべて削除</button> <button data-a="delallh">全履歴を削除</button>`},
+set:()=>`<div class="top"><button data-a="go" data-n="home">← もどる</button></div><h2>せってい</h2>
+ <h3>こども・タスク</h3>${S.kids.map(k=>`<button class="big" data-a="go" data-n="kedit" data-id="${k.id}">${k.icon} ${esc(k.name)}の設定</button>`).join('')||'<p class="box">ホームで「こどもを追加」をおしてね</p>'}
+ <h3>キャラクターのメッセージ</h3><p class="small">「できた」のときに出ます（全員共通・100件・50文字まで）。ふだんのメッセージは消せません。</p>
+ ${S.msgs.map((m,i)=>`<div class="row"><span>${esc(m)}</span><button data-a="edmsg" data-i="${i}">✏</button><button data-a="delmsg" data-i="${i}">🗑</button></div>`).join('')}
+ <div class="row"><input data-f="nm" maxlength="50" placeholder="あたらしいメッセージ"><button data-a="addmsg">追加</button></div>
+ <h3>タイマー終了メッセージ</h3><input data-f="endMsg" maxlength="50" value="${esc(S.endMsg)}" placeholder="空欄なら標準メッセージ"><p class="small">タイマー時間は「こども・タスク」の設定で変えられます。変更は次回のタイマー開始から適用されます。</p>
+ <h3>プライバシーについて</h3><div class="box small">データはこの端末のブラウザの中だけに保存され、サーバーには送りません。ブラウザのデータ消去や端末の変更で消えることがあります（バックアップ機能はありません）。アクセス解析にGoatCounterを使っており、外部への通信が発生しますが、こどもの名前・タスク・画像・できたかどうかは送りません。</div>
+ <h3>ホーム画面に追加する方法</h3><div class="box small">iPhone（Safari）：共有ボタン →「ホーム画面に追加」<br>Android（Chrome）：右上のメニュー（︙）→「ホーム画面に追加」または「アプリをインストール」</div>
+ <h3>アプリについて</h3><p>できたかな？ バージョン ${VER}<br>最終更新日 ${UPD}</p>
+ <button data-a="wipe">すべてのデータを削除</button>
+ <p style="text-align:center;margin-top:32px"><a href="https://ofuse.me/f3a8ad6a" target="_blank" rel="noopener">改善のアイディア・応援はこちら</a></p>`};
+function render(){let h='';
+ if(lock)h+=`<div class="warn">${lock===1?'このブラウザでは保存できないため、編集を止めています。':'ほかのタブでも開いています。このタブでは編集できません。'}</div>`;
+ if(saveErr)h+=`<div class="warn">保存できませんでした。画面の内容は残してあります。<button data-a="retry">もういちど保存</button><br>画像を小さくしたり、いらない履歴を消すと保存できることがあります。</div>`;
+ h+=notices.map((m,i)=>m===UPDMSG?`<div class="note">${m}<button data-a="upd">今すぐ更新</button><button data-a="close" data-i="${i}">後で</button></div>`:`<div class="note">${esc(m)}<button data-a="close" data-i="${i}">とじる</button></div>`).join('');
+ if(toastMsg)h+=`<div class="say">${esc(toastMsg)}</div>`;
+ const k=kid();if(['kid','kedit','task'].includes(view.n)&&!k)view={n:'home'};
+ app.innerHTML=h+V[view.n](k)}
+const go=(n,o={})=>{view={n,...o};render()};
+function toast(m){toastMsg=m;render();setTimeout(()=>{toastMsg='';render()},5000)}
+function answer(a){const k=kid();if(busy||!k||!k.tasks.length)return;busy=true;const t=k.tasks[k.pos];
+ k.st[t.id]=a;if(a==='no'&&k.t.end)pause(k);view.fb=a;view.msg=a==='ok'?pick():'';save();render();
+ setTimeout(()=>{busy=false;view.fb=null;if(k.ret!=null){k.pos=k.ret;k.ret=null}else{const j=nextIdx(k);if(j>=0)k.pos=j}save();render()},1000)}
+function tick(){let fin=false;S.kids.forEach(k=>{if(k.t.end&&Date.now()>=k.t.end){const late=Date.now()-k.t.end>3000;k.t.end=null;k.t.left=null;fin=true;
+  const m=S.endMsg||'じかんだよ！おわったよ！';if(late)notices.push(`${k.name}のタイマーは、とじているあいだにおわっていました`);else if(view.n==='kid'&&view.id===k.id)toast(m);else notices.push(`${k.name}：${m}`)}});
+ if(fin){save();render();return}
+ document.querySelectorAll('[data-tm]').forEach(e=>{const k=S.kids.find(x=>x.id===e.dataset.tm);if(!k)return;const r=rem(k);e.textContent=fmt(r);const b=e.nextElementSibling.firstChild;if(b)b.style.width=(active(k)?100-r/(k.t.total||k.t.min*60)*100:0)+'%'})}
+const EDITLESS=['upd','go','open','close','retry','hk'];
+app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,d=b.dataset,k=kid();
+ if(lock&&!EDITLESS.includes(a))return toast('いまは編集できません');
+ const reset=()=>{k.st={};k.pos=0;k.ret=null};
+ const A={upd:()=>waitSW&&waitSW.postMessage('skip'),go:()=>go(d.n,d.id?{id:d.id}:{}),open:()=>go('kid',{id:d.id}),close:()=>{notices.splice(+d.i,1);render()},retry:()=>{save();render()},
+ hk:()=>go('hist',{hk:d.id}),
+ newkid:()=>{const n=S.kids.length+1,id=uid();S.kids.push({id,name:'子ども'+n,icon:KI[(n-1)%8],char:CH[(n-1)%8],tasks:[],st:{},pos:0,ret:null,t:{min:30,left:null,end:null,total:0}});save();go('kedit',{id})},
+ ok:()=>answer('ok'),no:()=>answer('no'),
+ back:()=>{if(busy)return;const n=k.tasks.length;k.ret??=k.pos;k.pos=(k.pos-1+n)%n;save();render()},
+ pick:()=>{const f=d.f;if(f==='ticon'){view.icon=d.v}else k[f]=d.v;save();render()},
+ tstart:()=>{if(!done(k))return;if(k.t.left==null){k.t.left=k.t.min*60;k.t.total=k.t.left}k.t.end=Date.now()+k.t.left*1000;save();render()},
+ tpause:()=>{pause(k);save();render()},
+ treset:()=>{if(confirm('タイマーをリセットしますか？（タスクの状態は変わりません）')){k.t.left=null;k.t.end=null;save();render()}},
+ newtask:()=>go('task',{id:k.id,i:null}),edtask:()=>go('task',{id:k.id,i:+d.i}),
+ savetask:()=>{const name=app.querySelector('[data-f=tn]').value.trim();if(!name)return toast('タスク名を入力してね');const desc=app.querySelector('[data-f=td]').value.trim();
+  const icon=view.icon||(k.tasks[view.i]||{}).icon||TI[0];
+  if(view.i==null){const was=done(k);k.tasks.push({id:uid(),name,desc,icon});if(was||k.tasks.length===1)k.pos=k.tasks.length-1}
+  else{const t=k.tasks[view.i];if(t.name!==name||t.desc!==desc||t.icon!==icon){if(!confirm('変更すると、すべてのタスクが「まだ」に戻ります'))return;Object.assign(t,{name,desc,icon});reset()}}
+  save();go('kedit',{id:k.id})},
+ deltask:()=>{const i=+d.i;if(!confirm(`「${k.tasks[i].name}」を削除しますか？`))return;delete k.st[k.tasks[i].id];k.tasks.splice(i,1);k.ret=null;if(i<k.pos)k.pos--;if(k.pos>=k.tasks.length)k.pos=0;save();render()},
+ mv:()=>{const i=+d.i,j=i+ +d.d;if(j<0||j>=k.tasks.length)return;if(!confirm('変更すると、すべてのタスクが「まだ」に戻ります'))return;[k.tasks[i],k.tasks[j]]=[k.tasks[j],k.tasks[i]];reset();save();render()},
+ delkid:()=>{if(!confirm(`「${k.name}」を削除しますか？`))return;const delHist=confirm('この子の履歴も削除しますか？\nOK＝履歴も削除　キャンセル＝履歴を残す');
+  if(delHist)delete S.hist[k.id];else if(S.hist[k.id])S.gone.push({id:k.id,name:k.name,at:today()});S.kids=S.kids.filter(x=>x!==k);save();go('home')},
+ addmsg:()=>{const i=app.querySelector('[data-f=nm]'),v=i.value.trim();if(!v)return;if(S.msgs.length>=100)return toast('これ以上追加できません（100件まで）');S.msgs.push(v.slice(0,50));save();render()},
+ edmsg:()=>{const v=prompt('メッセージを編集（50文字まで）',S.msgs[+d.i]);if(v&&v.trim()){S.msgs[+d.i]=v.trim().slice(0,50);save();render()}},
+ delmsg:()=>{if(confirm('このメッセージを削除しますか？')){S.msgs.splice(+d.i,1);save();render()}},
+ delday:()=>{if(confirm(`${d.d} の履歴を削除しますか？`)){delete S.hist[view.hk][d.d];save();render()}},
+ delkh:()=>{if(confirm('このこどもの履歴をすべて削除しますか？')){delete S.hist[view.hk];S.gone=S.gone.filter(g=>g.id!==view.hk);save();go('hist')}},
+ delallh:()=>{if(confirm('現在のこども・削除済みのこどもを含む、全履歴を削除しますか？')){S.hist={};S.gone=[];save();go('hist')}},
+ wipe:()=>{if(confirm('こども・タスク・履歴・メッセージなど、すべてのデータを削除します。よろしいですか？')){try{localStorage.removeItem(KEY)}catch(e){}S=fresh();notices=[];go('home')}}};
+ A[a]?.()});
+app.addEventListener('change',e=>{const f=e.target.dataset.f,k=kid();if(!f||(lock&&f!=='from'&&f!=='to'))return;
+ if(f==='name'){k.name=e.target.value.trim()||'子ども'+(S.kids.indexOf(k)+1)}
+ else if(f==='min'){k.t.min=Math.min(120,Math.max(1,Math.round(+e.target.value)||30));e.target.value=k.t.min}
+ else if(f==='endMsg')S.endMsg=e.target.value.trim().slice(0,50);
+ else if(f==='from'||f==='to'){view[f]=e.target.value;render();return}
+ save();if(saveErr)render()});
+function boot(){roll();tick();render()}
+load();
+try{const bc=new BroadcastChannel('dk');bc.onmessage=e=>{if(e.data==='hi')bc.postMessage('busy');else if(e.data==='busy'&&!lock){lock=2;render()}};bc.postMessage('hi')}catch(e){}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!lock){roll();tick();render()}});
+boot();setInterval(tick,500);
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').then(r=>{
+ const offer=w=>{if(later||!navigator.serviceWorker.controller)return;later=true;waitSW=w;notices.push(UPDMSG);render()};
+ if(r.waiting)offer(r.waiting);r.addEventListener('updatefound',()=>{const w=r.installing;w.addEventListener('statechange',()=>{if(w.state==='installed')offer(w)})});
+ r.update().catch(()=>{})});
+let rl=false;navigator.serviceWorker?.addEventListener('controllerchange',()=>{if(!rl){rl=true;location.reload()}});
+</script></body></html>
