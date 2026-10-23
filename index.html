@@ -37,7 +37,7 @@ a{color:var(--pk)}
 <div id="rot">📱 たてむきにしてね</div><div id="app"></div><div id="rest" hidden></div>
 <script data-goatcounter="https://wel-be.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <script>
-const VER='1.3.0',UPD='2026-10-22',KEY='dekitakana.v1';
+const VER='1.3.1',UPD='2026-10-22',KEY='dekitakana.v1';
 const DEF=['えらいね！','すごい！','やったね！','ナイス！','かっこいい！','さすがだね！','ばっちり！'];
 const AV=['av:1','av:2','av:3','av:4','av:5','av:6'],CH=['ch:1','ch:2','ch:3','ch:4'],KI=AV,TI=['🪥','👕','🎒','🍚','🛁','📚','🧸','🧼','🥛','🌙','🧹','✏️','🎹','📄'];
 const app=document.getElementById('app');
@@ -91,7 +91,11 @@ function draw(cv,out){const {im,z,ox,oy,mode}=P,w=im.naturalWidth,h=im.naturalHe
 let ac=null,rest=null,wl=null,wlb=false;
 function unlock(){try{ac??=new (window.AudioContext||window.webkitAudioContext)();ac.resume();const b=ac.createBuffer(1,1,22050),n=ac.createBufferSource();n.buffer=b;n.connect(ac.destination);n.start(0)}catch(e){}}
 function bell(){if(!ac)return;try{ac.resume();const t=ac.currentTime;[0,.9,1.8].forEach(d=>[880,1760,2640].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0,t+d);g.gain.linearRampToValueAtTime(.3/(i+1),t+d+.01);g.gain.exponentialRampToValueAtTime(.001,t+d+1.6);o.connect(g);g.connect(ac.destination);o.start(t+d);o.stop(t+d+1.7)}))}catch(e){}}
-function setRest(id){rest=id;const e=document.getElementById('rest'),k=S.kids.find(x=>x.id===id);if(!k){rest=null;e.hidden=true;return}e.hidden=false;e.innerHTML=`<div id="rt">${fmt(rem(k))}</div><div>${esc(k.name)}</div><div class="s">タップでもどる</div>`}
+let restT=null;
+function setRest(id,fade){clearTimeout(restT);rest=id;const e=document.getElementById('rest'),k=S.kids.find(x=>x.id===id);if(!k){rest=null;e.hidden=true;return}
+ e.innerHTML=`<div id="rt">${fmt(rem(k))}</div><div>${esc(k.name)}</div><div class="s">タップでもどる</div>`;
+ e.style.transition='none';e.style.opacity=fade?0:1;e.hidden=false;if(fade){e.offsetWidth;e.style.transition='opacity 3s ease';e.style.opacity=1}}
+const restLater=id=>{clearTimeout(restT);restT=setTimeout(()=>{const k=S.kids.find(x=>x.id===id);if(k&&k.t.end)setRest(id,true)},5000)};
 async function syncWake(){if(wlb)return;wlb=true;try{const on=S.kids.some(k=>k.t.end);if(on&&!wl&&navigator.wakeLock&&document.visibilityState==='visible'){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}else if(!on&&wl){await wl.release();wl=null}}catch(e){wl=null}wlb=false}
 document.getElementById('rest').addEventListener('click',()=>setRest(null));
 document.addEventListener('pointerdown',()=>{if(!ac||ac.state!=='running')unlock()});
@@ -133,7 +137,7 @@ set:()=>`<div class="top"><button data-a="go" data-n="home">← もどる</butto
  ${S.msgs.map((m,i)=>`<div class="row"><span>${esc(m)}</span><button data-a="edmsg" data-i="${i}">✏</button><button data-a="delmsg" data-i="${i}">🗑</button></div>`).join('')}
  <div class="row"><input data-f="nm" maxlength="50" placeholder="あたらしいメッセージ"><button data-a="addmsg">追加</button></div>
  <h3>タイマー終了メッセージ</h3><input data-f="endMsg" maxlength="50" value="${esc(S.endMsg)}" placeholder="空欄なら標準メッセージ"><p class="small">タイマー時間は「こども・タスク」の設定で変えられます。変更は次回のタイマー開始から適用されます。</p>
- <h3>音とおやすみ画面</h3><p class="small">アプリを開いている間だけ、タイマー終了時に鈴が鳴ります。タイマー中は画面が消えないようにし、黒い「おやすみ画面」を表示します（画面の明るさは端末側で下げてください）。マナーモードでは鳴らないことがあります。</p><button data-a="bellt">🔔 鈴の音をためす</button>
+ <h3>音とおやすみ画面</h3><p class="small">アプリを開いている間だけ、タイマー終了時に鈴が鳴ります。タイマー中は画面が消えないようにし、開始の5秒後に少しずつ黒い「おやすみ画面」にします（画面の明るさは端末側で下げてください）。マナーモードでは鳴らないことがあります。</p><button data-a="bellt">🔔 鈴の音をためす</button>
  <h3>プライバシーについて</h3><div class="box small">データはこの端末のブラウザの中だけに保存され、サーバーには送りません。ブラウザのデータ消去や端末の変更で消えることがあります（バックアップ機能はありません）。アクセス解析にGoatCounterを使っており、外部への通信が発生しますが、こどもの名前・タスク・画像・できたかどうかは送りません。</div>
  <h3>ホーム画面に追加する方法</h3><div class="box small">iPhone（Safari）：共有ボタン →「ホーム画面に追加」<br>Android（Chrome）：右上のメニュー（︙）→「ホーム画面に追加」または「アプリをインストール」</div>
  <h3>アプリについて</h3><p>できたかな？ バージョン ${VER}<br>最終更新日 ${UPD}</p>
@@ -170,7 +174,7 @@ app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)retu
  ok:()=>answer('ok'),no:()=>answer('no'),
  back:()=>{if(busy)return;const n=k.tasks.length;k.ret??=k.pos;k.pos=(k.pos-1+n)%n;save();render()},
  pick:()=>{const f=d.f;if(f==='ticon'){view.icon=d.v}else k[f]=d.v;save();render()},
- tstart:()=>{if(!done(k))return;unlock();if(k.t.left==null){k.t.left=k.t.min*60;k.t.total=k.t.left}k.t.end=Date.now()+k.t.left*1000;save();render();setRest(k.id)},
+ tstart:()=>{if(!done(k))return;unlock();if(k.t.left==null){k.t.left=k.t.min*60;k.t.total=k.t.left}k.t.end=Date.now()+k.t.left*1000;save();render();restLater(k.id)},
  tpause:()=>{pause(k);save();render()},
  treset:()=>{if(confirm('タイマーをリセットしますか？（タスクの状態は変わりません）')){k.t.left=null;k.t.end=null;save();render()}},
  newtask:()=>go('task',{id:k.id,i:null}),edtask:()=>go('task',{id:k.id,i:+d.i}),
