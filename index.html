@@ -37,7 +37,7 @@ a{color:var(--pk)}
 <div id="rot">📱 たてむきにしてね</div><div id="app"></div><div id="rest" hidden></div>
 <script data-goatcounter="https://wel-be.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <script>
-const VER='1.4.0',UPD='2026-10-22',KEY='dekitakana.v1';
+const VER='1.4.1',UPD='2026-10-22',KEY='dekitakana.v1';
 const DEF=['えらいね！','すごい！','やったね！','ナイス！','かっこいい！','さすがだね！','ばっちり！'];
 const AV=['av:1','av:2','av:3','av:4','av:5','av:6'],CH=['ch:1','ch:2','ch:3','ch:4','ch:5','ch:6','ch:7','ch:8','ch:9','ch:10'],KI=AV,TI=['🪥','👕','🎒','🍚','🛁','📚','🧸','🧼','🥛','🌙','🧹','✏️','🎹','📄'];
 const app=document.getElementById('app');
@@ -121,7 +121,7 @@ task:k=>{const t=k.tasks[view.i]||{name:'',desc:'',icon:TI[0]};return `<div clas
  <label>タスク名（30文字まで）<input data-f="tn" maxlength="30" value="${esc(view.tn??t.name)}"></label><label>せつめい（100文字まで・なくてもOK）<input data-f="td" maxlength="100" value="${esc(view.td??t.desc)}"></label>
  <h3>アイコン</h3><div class="ic">${pic(view.icon||t.icon)}</div>${picks('ticon',TI,view.icon||t.icon)}${upl('ticon')}<button class="big alt" data-a="savetask">ほぞん</button>`},
 imgedit:()=>`<h2>画像のちょうせい</h2><canvas id="cv" width="280" height="280" style="width:280px;height:280px;display:block;margin:auto;border-radius:${P.mode==='c'?'50%':'12px'};border:2px solid var(--bd);touch-action:none"></canvas>
- <div class="two" style="margin-top:12px"><button class="${P.mode==='f'?'on':''}" data-a="imode" data-m="f">全体を表示</button><button class="${P.mode==='c'?'on':''}" data-a="imode" data-m="c">正方形に切り抜く</button></div>
+ <div class="two" style="margin-top:12px"><button class="${P.mode==='f'?'on':''}" data-a="imode" data-m="f">全体を表示</button><button class="${P.mode==='c'?'on':''}" data-a="imode" data-m="c">丸く切り抜く</button></div>
  ${P.mode==='c'?`<p class="small">ゆびでうごかして、スライダーで大きさをかえます</p><input type="range" data-f="zoom" min="1" max="4" step="0.05" value="${P.z}">`:''}
  <div class="two" style="margin-top:12px"><button data-a="icancel">やめる</button><button class="alt" data-a="iok">決定</button></div>`,
 hist:()=>{const all=S.kids.map(k=>({id:k.id,name:k.name})).concat(S.gone.map(g=>({id:g.id,name:`${g.name}（削除済み ${g.at}）`})));
